@@ -1,0 +1,66 @@
+### What to implement?
+
+
+rdtp_common: All the recv/send logic.
+rdtp_server: In init, creates sockets.
+Has server_forever logic.
+rdtp_client: In init, creates sockets.
+Has connect (to a server)
+Has listener
+Processes on a queue
+
+
+Every node has:
+- one server (for receiving)
+- n clients (one for each peer node)
+  - when a node dies, kill the associated client
+      - it doesn't hurt much to keep that client around,
+        so basically, if send ever fails, kill that client.
+
+server only receives
+client only sends
+
+when server receives, it calls
+self.recieved_message(message.split(':'))
+- first bit has the action
+- rest are parameters
+- node can then do things with this (might make an extra subclass here later)
+
+client just has the send method
+
+
+The coordinator has:
+- an rdtp for every node
+- one rdtp server
+It receives (server) the following:
+- NEW CONNECTION (node_name, reliability, speed)
+It creates a client.
+Then sends through that client the following:
+- list of peer nodes
+
+
+Example:
+node 0 pops up (we hard-code coordinator's port number)
+n0 connects to coordinator
+Coordinator sends back nearby nodes (n1)
+n0 creates clients for each clients { n1: client_object }
+n0 announces connection to Coordinator
+  n0.clients[n1] -------> n1_server: "hey dude. here's my server"
+n1_server logs this connection.
+n1 creates new client.
+n1.clients[n0] ------> n0_server: "dude, returning your heartbeat."
+
+Invariant afterward:
+n1.clients[n0] ----> n0_server
+n0.clients[n1] ----> n1_server
+
+If some server doesn't respond:
+It will be removed from the corresponding client list.
+
+
+
+###
+Question.
+If the server finds that a client has removed, should
+it tell the node to remove that clent from the client stack???
+
